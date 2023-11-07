@@ -1,5 +1,7 @@
 package main
 
+import "reflect"
+
 /*
 === Or channel ===
 
@@ -33,6 +35,34 @@ start := time.Now()
 fmt.Printf(“fone after %v”, time.Since(start))
 */
 
-func main() {
+// or объединяет один или более done каналов в single канал.
+var or func(channels ...<-chan interface{}) <-chan interface{} = func(channels ...<-chan interface{}) <-chan interface{} {
+	switch len(channels) {
+	case 0:
+		// Если нет каналов, возвращаем закрытый канал
+		c := make(chan interface{})
+		close(c)
+		return c
+	case 1:
+		// Если канал один, просто возвращаем его
+		return channels[0]
+	}
 
+	orDone := make(chan interface{})
+	go func() {
+		defer close(orDone)
+		var cases []reflect.SelectCase
+		for _, ch := range channels {
+			cases = append(cases, reflect.SelectCase{
+				Dir:  reflect.SelectRecv,
+				Chan: reflect.ValueOf(ch),
+			})
+		}
+
+		// Ждём сигнала из любого канала
+		reflect.Select(cases)
+		// Как только получаем сигнал, выходной канал будет закрыт
+	}()
+
+	return orDone
 }

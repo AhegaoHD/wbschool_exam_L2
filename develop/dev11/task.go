@@ -1,5 +1,10 @@
 package main
 
+import (
+	"develop/develop/dev11/server"
+	"log"
+)
+
 /*
 === HTTP server ===
 
@@ -23,5 +28,8 @@ package main
 */
 
 func main() {
-
+	run := server.RunServer()
+	if run != nil {
+		log.Println(run)
+	}
 }

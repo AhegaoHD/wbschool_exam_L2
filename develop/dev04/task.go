@@ -1,5 +1,10 @@
 package main
 
+import (
+	"sort"
+	"strings"
+)
+
 /*
 === Поиск анаграмм по словарю ===
 
@@ -19,6 +24,53 @@ package main
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-func main() {
+// Функция для сортировки строки
+func sortString(w string) string {
+	s := strings.Split(w, "")
+	sort.Strings(s)
+	return strings.Join(s, "")
+}
 
+// Функция поиска всех множеств анаграмм по словарю
+func findAnagrams(dict []string) *map[string][]string {
+	anagrams := make(map[string][]string)
+	visited := make(map[string]bool)
+
+	for _, word := range dict {
+		// Приведение слова к нижнему регистру
+		word = strings.ToLower(word)
+		sortedWord := sortString(word)
+
+		if visited[word] {
+			continue
+		}
+		visited[word] = true
+
+		// Если ключ для отсортированного слова существует, добавляем слово в множество
+		if _, exists := anagrams[sortedWord]; exists {
+			anagrams[sortedWord] = append(anagrams[sortedWord], word)
+		} else {
+			anagrams[sortedWord] = []string{word}
+		}
+	}
+
+	// Удаление множеств, содержащих только одно слово
+	for key, group := range anagrams {
+		if len(group) < 2 {
+			delete(anagrams, key)
+		} else {
+			// Сортировка слов в множестве по возрастанию
+			sort.Strings(anagrams[key])
+		}
+	}
+
+	// Формирование итоговой мапы с первым словом в качестве ключа
+	result := make(map[string][]string)
+	for _, group := range anagrams {
+		sort.Strings(group)
+		key := group[0]
+		result[key] = group
+	}
+
+	return &result
 }
